@@ -1,0 +1,26 @@
+Tasks
+
+Legend: TODO, IN_PROG, DONE
+
+DONE Design Rating Model
+IN_PROG Implement Clustering
+TODO Implement DB
+TODO Implement rating psoting
+TODO Integrate
+
+Backlog:
+Post Review: 1-5
+1 - I hate what I see
+2 - I don't like what I see
+3 - It's acceptable
+4 - I like what I see
+5 - I love what  see
+
+Data Structure
+
+Table 1
+_id, lat, lon, rating
+
+
+
+
