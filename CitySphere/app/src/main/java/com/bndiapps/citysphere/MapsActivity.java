@@ -1,11 +1,10 @@
 package com.bndiapps.citysphere;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
+import android.location.Location;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
@@ -13,20 +12,25 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.Map;
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
+    GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
-
-  private static final int MY_PERMISSIONS_REQUEST = 1000;
   private GoogleMap mMap;
   private BottomSheetBehavior bottomSheetBehavior;
+  private GoogleApiClient googleApiClient;
+  private Location lastLocation;
+  private FloatingActionButton actionButton;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -36,12 +40,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     configureBottomSheetBehavior();
     configureRateButtons();
 
+    buildGoogleApiClient();
+
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
     SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
         .findFragmentById(R.id.map);
     mapFragment.getMapAsync(this);
   }
 
+  @Override
+  protected void onStart() {
+    super.onStart();
+    googleApiClient.connect();
+  }
+
+  @Override
+  protected void onPause() {
+    googleApiClient.disconnect();
+    super.onPause();
+  }
 
   /**
    * Manipulates the map once available.
@@ -56,53 +73,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   public void onMapReady(GoogleMap googleMap) {
     mMap = googleMap;
 
-    // Add a marker in Sydney and move the camera
-    LatLng sydney = new LatLng(-34, 151);
-    mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-    mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
-    mMap.getUiSettings().setCompassEnabled(false);
-    mMap.getUiSettings().setMapToolbarEnabled(true);
-    mMap.getUiSettings().setMyLocationButtonEnabled(true);
+    mMap.getUiSettings().setMyLocationButtonEnabled(false);
+    mMap.setMyLocationEnabled(true);
 
     goToCurrentLocation();
   }
 
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-      @NonNull int[] grantResults) {
-    switch (requestCode) {
-      case MY_PERMISSIONS_REQUEST: {
-        if (grantResults.length > 0
-            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-          goToCurrentLocation();
-
-        }
-      }
-    }
-  }
-
   private void goToCurrentLocation() {
-    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-        != PackageManager.PERMISSION_GRANTED
-        && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-        != PackageManager.PERMISSION_GRANTED) {
-      ActivityCompat.requestPermissions(this,
-          new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-          MY_PERMISSIONS_REQUEST);
+    if (lastLocation == null) {
       return;
     }
-    mMap.setMyLocationEnabled(true);
+    LatLng latLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+    mMap.animateCamera(CameraUpdateFactory.zoomTo(17));
   }
 
   private void configureBottomSheetBehavior() {
-    FloatingActionButton btn = (FloatingActionButton) findViewById(R.id.rate_btn);
+    actionButton = (FloatingActionButton) findViewById(R.id.rate_btn);
+    actionButton.setEnabled(false);
     LinearLayout bottom = (LinearLayout) findViewById(R.id.bottom_layout);
     bottomSheetBehavior = BottomSheetBehavior.from(bottom);
-    btn.setOnClickListener(new View.OnClickListener() {
+    actionButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
+        goToCurrentLocation();
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
       }
     });
@@ -127,5 +121,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     ummBtn.setOnClickListener(rateButtonListener);
     likeBtn.setOnClickListener(rateButtonListener);
     loveBtn.setOnClickListener(rateButtonListener);
+  }
+
+  @Override
+  public void onLocationChanged(Location location) {
+    lastLocation = location;
+    if (lastLocation != null) {
+      actionButton.setEnabled(true);
+    }
+  }
+
+  @Override
+  public void onConnected(@Nullable Bundle bundle) {
+    LocationRequest locationRequest = LocationRequest.create();
+    locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    locationRequest.setInterval(100); // Update location every second
+
+    LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+    lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+
+    if (lastLocation != null) {
+      actionButton.setEnabled(true);
+    }
+  }
+
+  @Override
+  public void onConnectionSuspended(int i) {
+
+  }
+
+  @Override
+  public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    buildGoogleApiClient();
+  }
+
+  synchronized void buildGoogleApiClient() {
+    googleApiClient = new GoogleApiClient.Builder(this)
+        .addConnectionCallbacks(this)
+        .addOnConnectionFailedListener(this)
+        .addApi(LocationServices.API)
+        .build();
   }
 }
