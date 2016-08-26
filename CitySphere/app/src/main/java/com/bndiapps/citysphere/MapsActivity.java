@@ -4,13 +4,16 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -50,7 +53,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     buildGoogleApiClient();
 
-    ratingController = new RatingController();
+    ratingController = new RatingController(this);
+//    ratingController.addDummyRatings();
 
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
     SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -117,40 +121,113 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   private void configureBottomSheetBehavior() {
     actionButton = (FloatingActionButton) findViewById(R.id.rate_btn);
     actionButton.setEnabled(false);
-    LinearLayout bottom = (LinearLayout) findViewById(R.id.bottom_layout);
+    final LinearLayout bottom = (LinearLayout) findViewById(R.id.bottom_layout);
     bottomSheetBehavior = BottomSheetBehavior.from(bottom);
+
+    final TextView moreTextView = (TextView) findViewById(R.id.more_text);
+    final View moreLayout = findViewById(R.id.more_layout);
+
     actionButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         goToCurrentLocation();
+
+        ((TextView) findViewById(R.id.rate_text)).setTextColor(getResources().getColor(android.R.color.white));
+        ((TextView) findViewById(R.id.dislike_text)).setTextColor(getResources().getColor(android.R.color.white));
+        ((TextView) findViewById(R.id.umm_text)).setTextColor(getResources().getColor(android.R.color.white));
+        ((TextView) findViewById(R.id.like_text)).setTextColor(getResources().getColor(android.R.color.white));
+        ((TextView) findViewById(R.id.love_text)).setTextColor(getResources().getColor(android.R.color.white));
+
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
       }
     });
+
+//    moreTextView.setOnClickListener(new View.OnClickListener() {
+//      @Override
+//      public void onClick(View v) {
+//        moreTextView.setVisibility(View.GONE);
+//        moreLayout.setVisibility(View.VISIBLE);
+//      }
+//    });
   }
 
   private void configureRateButtons() {
+    final Integer[] selected = new Integer[1];
+
+    ImageButton hateBtn = (ImageButton) findViewById(R.id.hate_rating_img);
+    ImageButton dislikeBtn = (ImageButton) findViewById(R.id.dislike_rating_img);
+    final ImageButton ummBtn = (ImageButton) findViewById(R.id.umm_rating_img);
+    ImageButton likeBtn = (ImageButton) findViewById(R.id.like_rating_img);
+    ImageButton loveBtn = (ImageButton) findViewById(R.id.love_rating_img);
+
+    final TextView hateText = (TextView) findViewById(R.id.hate_text);
+    final TextView dislikeText = (TextView) findViewById(R.id.dislike_text);
+    final TextView ummText = (TextView) findViewById(R.id.umm_text);
+    final TextView likeText = (TextView) findViewById(R.id.like_text);
+    final TextView loveText = (TextView) findViewById(R.id.love_text);
+
+    final TextView rateText = (TextView) findViewById(R.id.rate_text);
+
+    hateText.setTextColor(getResources().getColor(android.R.color.white));
+    dislikeText.setTextColor(getResources().getColor(android.R.color.white));
+    ummText.setTextColor(getResources().getColor(android.R.color.white));
+    likeText.setTextColor(getResources().getColor(android.R.color.white));
+    loveText.setTextColor(getResources().getColor(android.R.color.white));
+
     View.OnClickListener rateButtonListener = new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         int rate = Integer.parseInt((String) v.getTag());
-        Rating rating = new Rating(lastLocation.getLatitude(), lastLocation.getLongitude(), rate);
-        ratingController.addRating(rating);
-        clusterManager.addItem(rating);
-        clusterManager.cluster();
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        selected[0] = rate;
+
+        hateText.setTextColor(getResources().getColor(android.R.color.white));
+        dislikeText.setTextColor(getResources().getColor(android.R.color.white));
+        ummText.setTextColor(getResources().getColor(android.R.color.white));
+        likeText.setTextColor(getResources().getColor(android.R.color.white));
+        loveText.setTextColor(getResources().getColor(android.R.color.white));
+
+        TextView textView;
+        switch (rate) {
+          case 1:
+            textView = hateText;
+            break;
+          case 2:
+            textView = dislikeText;
+            break;
+          case 3:
+            textView = ummText;
+            break;
+          case 4:
+            textView = likeText;
+            break;
+          default:
+            textView = loveText;
+        }
+
+        textView.setTextColor(getResources().getColor(R.color.colorAccent));
       }
     };
 
-    ImageButton hateBtn = (ImageButton) findViewById(R.id.hate_rating_img);
-    ImageButton dislikeBtn = (ImageButton) findViewById(R.id.dislike_rating_img);
-    ImageButton ummBtn = (ImageButton) findViewById(R.id.umm_rating_img);
-    ImageButton likeBtn = (ImageButton) findViewById(R.id.like_rating_img);
-    ImageButton loveBtn = (ImageButton) findViewById(R.id.love_rating_img);
     hateBtn.setOnClickListener(rateButtonListener);
     dislikeBtn.setOnClickListener(rateButtonListener);
     ummBtn.setOnClickListener(rateButtonListener);
     likeBtn.setOnClickListener(rateButtonListener);
     loveBtn.setOnClickListener(rateButtonListener);
+
+    rateText.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        saveRating(selected[0]);
+      }
+    });
+  }
+
+  private void saveRating(int rate) {
+    Rating rating = new Rating(lastLocation.getLatitude(), lastLocation.getLongitude(), rate);
+    ratingController.addRating(rating);
+    clusterManager.addItem(rating);
+    clusterManager.cluster();
+    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
   }
 
   @Override
@@ -207,5 +284,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   @Override
   public boolean onClusterItemClick(Rating rating) {
     return true;
+  }
+
+  @Override
+  public void onBackPressed() {
+    if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+      bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+    }
+    else {
+      super.onBackPressed();
+    }
   }
 }

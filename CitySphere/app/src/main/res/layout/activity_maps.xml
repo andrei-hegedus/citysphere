@@ -40,7 +40,6 @@
         android:layout_gravity="center_horizontal"
         android:textColor="@android:color/white"
         android:textSize="18sp"
-        android:textStyle="bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
@@ -68,6 +67,7 @@
             />
 
         <TextView
+            android:id="@+id/hate_text"
             android:layout_below="@id/hate_rating_img"
             android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
@@ -94,6 +94,7 @@
             />
 
         <TextView
+            android:id="@+id/dislike_text"
             android:layout_below="@id/dislike_rating_img"
             android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
@@ -120,6 +121,7 @@
             />
 
         <TextView
+            android:id="@+id/umm_text"
             android:layout_below="@id/umm_rating_img"
             android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
@@ -146,6 +148,7 @@
             />
 
         <TextView
+            android:id="@+id/like_text"
             android:layout_below="@id/like_rating_img"
             android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
@@ -171,15 +174,61 @@
             />
 
         <TextView
+            android:id="@+id/love_text"
             android:layout_below="@id/love_rating_img"
             android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Love"
             android:textStyle="bold"
-            android:textColor="@android:color/white"
-            />
+            android:textColor="@android:color/white"/>
       </RelativeLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/more_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="MORE"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:padding="8dp"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:id="@+id/more_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+      <TextView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:labelFor="@+id/review_details"
+          android:textColor="@android:color/white"
+          android:text="Add a review"/>
+
+      <EditText
+          android:id="@+id/review_details"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:lines="3"
+          android:inputType="text"
+          android:textColor="@android:color/white"
+          android:theme="@style/Theme.App.Base"/>
+
+      <TextView
+          android:id="@+id/rate_text"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="OK"
+          android:textColor="@color/colorAccent"
+          android:gravity="end"
+          android:layout_gravity="end"
+          android:padding="8dp"/>
+      
     </LinearLayout>
 
   </LinearLayout>
