@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "967487542845",
+    "firebase_url": "https://citysphere-f168a.firebaseio.com",
+    "project_id": "citysphere-f168a",
+    "storage_bucket": "citysphere-f168a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:967487542845:android:ce0be2bf5b0a1666",
+        "android_client_info": {
+          "package_name": "com.bndiapps.citysphere"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "967487542845-t708nr97n8o21jbas8i9m64cjbthefkf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8GRyqwsLsW_9HiWWdCvLU8YvE4fZkyAQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
