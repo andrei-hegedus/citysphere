@@ -8,6 +8,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -22,10 +23,18 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.Arrays;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
+  private static final String TAG = MapsActivity.class.getSimpleName();
   private GoogleMap mMap;
   private BottomSheetBehavior bottomSheetBehavior;
   private GoogleApiClient googleApiClient;
@@ -77,6 +86,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     mMap.setMyLocationEnabled(true);
 
     goToCurrentLocation();
+
+    doSomeFirebaseStuff();
+  }
+
+  private void doSomeFirebaseStuff() {
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference("polls");
+    myRef.addValueEventListener(new ValueEventListener() {
+      @Override
+      public void onDataChange(DataSnapshot dataSnapshot) {
+        Object value = dataSnapshot.getValue();
+        Log.d(TAG, "Value is: " + value);
+      }
+
+      @Override
+      public void onCancelled(DatabaseError error) {
+        Log.w(TAG, "Failed to read value.", error.toException());
+      }
+    });
   }
 
   private void goToCurrentLocation() {
