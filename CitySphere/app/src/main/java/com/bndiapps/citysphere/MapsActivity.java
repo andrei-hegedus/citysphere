@@ -22,6 +22,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.clustering.ClusterManager;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener, LocationListener {
@@ -31,6 +32,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   private GoogleApiClient googleApiClient;
   private Location lastLocation;
   private FloatingActionButton actionButton;
+  private ClusterManager<Rating> clusterManager;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
