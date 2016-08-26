@@ -28,6 +28,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     GoogleApiClient.OnConnectionFailedListener, LocationListener, ClusterManager.OnClusterClickListener<Rating>,
     ClusterManager.OnClusterItemClickListener<Rating> {
 
+  private static final double DEFAULT_LAT = 46.422378;
+  private static final double DEFAULT_LONG = 23.561202;
+  private static final float DEFAULT_ZOOM = 8;
+
   private GoogleMap mMap;
   private BottomSheetBehavior bottomSheetBehavior;
   private GoogleApiClient googleApiClient;
@@ -81,6 +85,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     mMap.getUiSettings().setMyLocationButtonEnabled(false);
     mMap.setMyLocationEnabled(true);
+    goToPosition(new LatLng(DEFAULT_LAT, DEFAULT_LONG), DEFAULT_ZOOM);
 
     this.clusterManager = new ClusterManager<>(this, mMap);
     RatingRenderer renderer = new RatingRenderer(this, mMap, clusterManager);
