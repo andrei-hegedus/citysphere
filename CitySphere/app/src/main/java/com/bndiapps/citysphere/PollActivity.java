@@ -1,6 +1,7 @@
 package com.bndiapps.citysphere;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -30,7 +31,14 @@ public class PollActivity extends Activity {
         pollQuestionsRV.setLayoutManager(llm);
 
         List<String> questions = new ArrayList<>();
-        questions.add("The First Question");
+
+
+        Intent intent = getIntent();
+        Poll poll = (Poll) intent.getExtras().getSerializable(PollNotificationService.POLL);
+        if (poll != null) {
+            questions.addAll(poll.getQuestions());
+        }
+
         PollRVAdapter pollRVAdapter = new PollRVAdapter(questions);
         pollQuestionsRV.setAdapter(pollRVAdapter);
     }
