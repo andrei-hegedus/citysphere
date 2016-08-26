@@ -1,6 +1,11 @@
 package com.bndiapps.citysphere;
 
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -11,7 +16,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.RemoteInput;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
@@ -34,16 +39,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
+    public static final String ACTION_CLOSE_POLL_NOTIFICATION = "close-poll-notification";
     private GoogleMap mMap;
     private BottomSheetBehavior bottomSheetBehavior;
     private GoogleApiClient googleApiClient;
@@ -95,19 +98,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setMyLocationEnabled(true);
 
         goToCurrentLocation();
-
-        doSomeFirebaseStuff();
+        checkForPolls();
     }
 
-    private void doSomeFirebaseStuff() {
+
+    private void checkForPolls() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference("polls");
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                HashMap<String, String> value = (HashMap) dataSnapshot.getValue();
-                Log.d(TAG, "Value is: " + value);
-                showPollNotification();
+                HashMap polls = (HashMap) dataSnapshot.getValue();
+                List<Poll> pollList = Poll.fromMap(polls);
+                for(Poll poll : pollList) {
+                    Log.d(TAG, poll.toString());
+                }
+                if(pollList.size()>0){
+                    showPollNotification(pollList.get(0));
+                }
             }
 
             @Override
@@ -140,19 +148,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void showPollNotification() {
+    private void showPollNotification(Poll poll) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(MapsActivity.this);
         builder.setSmallIcon(R.mipmap.ic_launcher).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher)).setContentTitle("New poll")
-                .setContentText("We want to hear your feedback :)").setPriority(NotificationCompat.PRIORITY_MAX)
+                .setContentText(poll.getTitle()).setPriority(NotificationCompat.PRIORITY_MAX)
                 .setDefaults(NotificationCompat.DEFAULT_VIBRATE);
 
-        NotificationCompat.Action okAction = new NotificationCompat.Action.Builder(R.drawable.ic_menu_forward, "OK", null).build();
+        int notificationId = (int) Math.random();
+        Intent iOK = new Intent(this, PollNotificationService.class);
+        iOK.putExtra(PollNotificationService.NOTIFICATION_ID, notificationId);
+        iOK.putExtra(PollNotificationService.POLL, poll);
+        PendingIntent iOKPendingIntent = PendingIntent.getService(this, 1, iOK, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Action okAction = new NotificationCompat.Action.Builder(R.drawable.ic_menu_forward, "OK", iOKPendingIntent).build();
         builder.addAction(okAction);
-        NotificationCompat.Action cancelAction = new NotificationCompat.Action.Builder(android.R.drawable.ic_menu_close_clear_cancel, "No Thanks", null).build();
+
+        Intent iCancel = new Intent(this, PollNotificationService.class);
+        iOK.putExtra(PollNotificationService.NOTIFICATION_ID, notificationId);
+        PendingIntent iCancelPendingIntent = PendingIntent.getService(this, 1, iOK, PendingIntent.FLAG_UPDATE_CURRENT);
+        NotificationCompat.Action cancelAction = new NotificationCompat.Action.Builder(android.R.drawable.ic_menu_close_clear_cancel, "No Thanks", iCancelPendingIntent).build();
         builder.addAction(cancelAction);
 
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        mNotificationManager.notify(10, builder.build());
+        mNotificationManager.notify(notificationId, builder.build());
     }
 
     private void configureRateButtons() {
