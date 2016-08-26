@@ -103,7 +103,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     btn.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Toast.makeText(MapsActivity.this, "Hello", Toast.LENGTH_SHORT).show();
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
       }
     });

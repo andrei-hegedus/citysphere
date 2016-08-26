@@ -32,7 +32,6 @@ public class RateActivity extends AppCompatActivity{
     btn.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Toast.makeText(RateActivity.this, "Hello", Toast.LENGTH_SHORT).show();
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
       }
     });

@@ -21,7 +21,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
-        android:src="@android:drawable/ic_menu_add"
+        android:src="@drawable/sun_simple_white"
         android:layout_margin="30dip"
         app:elevation="4dp"/>
   </FrameLayout>
