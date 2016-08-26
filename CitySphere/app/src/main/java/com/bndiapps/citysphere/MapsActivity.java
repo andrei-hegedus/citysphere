@@ -1,5 +1,9 @@
 package com.bndiapps.citysphere;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -9,6 +13,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
+import android.support.v7.app.NotificationCompat;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -24,8 +30,16 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
+
+import java.util.HashMap;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener, LocationListener, ClusterManager.OnClusterClickListener<Rating>,
@@ -34,6 +48,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   private static final double DEFAULT_LAT = 46.422378;
   private static final double DEFAULT_LONG = 23.561202;
   private static final float DEFAULT_ZOOM = 8;
+  private static final String TAG = "MapsActivity";
 
   private GoogleMap mMap;
   private BottomSheetBehavior bottomSheetBehavior;
@@ -103,7 +118,57 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     clusterManager.addItems(ratingController.getRatings());
     clusterManager.cluster();
+    checkForPolls();
   }
+
+  private void checkForPolls() {
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference("polls");
+    myRef.addValueEventListener(new ValueEventListener() {
+      @Override
+      public void onDataChange(DataSnapshot dataSnapshot) {
+        HashMap polls = (HashMap) dataSnapshot.getValue();
+        List<Poll> pollList = Poll.fromMap(polls);
+        for(Poll poll : pollList) {
+          Log.d(TAG, poll.toString());
+        }
+        if(pollList.size()>0){
+          showPollNotification(pollList.get(0));
+        }
+      }
+
+      @Override
+      public void onCancelled(DatabaseError error) {
+        Log.w(TAG, "Failed to read value.", error.toException());
+      }
+    });
+  }
+
+  private void showPollNotification(Poll poll) {
+    NotificationCompat.Builder builder = new NotificationCompat.Builder(MapsActivity.this);
+    builder.setSmallIcon(R.mipmap.ic_launcher).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher)).setContentTitle("New poll")
+            .setContentText(poll.getTitle()).setPriority(NotificationCompat.PRIORITY_MAX)
+            .setDefaults(NotificationCompat.DEFAULT_VIBRATE);
+
+    int notificationId = 2;
+    Intent iOK = new Intent(this, PollNotificationService.class);
+    iOK.putExtra(PollNotificationService.NOTIFICATION_ID, notificationId);
+    iOK.putExtra(PollNotificationService.POLL, poll);
+    PendingIntent iOKPendingIntent = PendingIntent.getService(this, 1, iOK, PendingIntent.FLAG_UPDATE_CURRENT);
+
+    NotificationCompat.Action okAction = new NotificationCompat.Action.Builder(R.drawable.ic_menu_forward, "OK", iOKPendingIntent).build();
+    builder.addAction(okAction);
+
+    Intent iCancel = new Intent(this, PollNotificationService.class);
+    iCancel.putExtra(PollNotificationService.NOTIFICATION_ID, notificationId);
+    PendingIntent iCancelPendingIntent = PendingIntent.getService(this, 12, iCancel, PendingIntent.FLAG_UPDATE_CURRENT);
+    NotificationCompat.Action cancelAction = new NotificationCompat.Action.Builder(android.R.drawable.ic_menu_close_clear_cancel, "No Thanks", iCancelPendingIntent).build();
+    builder.addAction(cancelAction);
+
+    NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    mNotificationManager.notify(notificationId, builder.build());
+  }
+
 
   private void goToCurrentLocation() {
     if (lastLocation == null) {
