@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -22,10 +21,16 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
-    GoogleApiClient.OnConnectionFailedListener, LocationListener {
+    GoogleApiClient.OnConnectionFailedListener, LocationListener, ClusterManager.OnClusterClickListener<Rating>,
+    ClusterManager.OnClusterItemClickListener<Rating> {
+
+  private static final double DEFAULT_LAT = 46.422378;
+  private static final double DEFAULT_LONG = 23.561202;
+  private static final float DEFAULT_ZOOM = 8;
 
   private GoogleMap mMap;
   private BottomSheetBehavior bottomSheetBehavior;
@@ -33,6 +38,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
   private Location lastLocation;
   private FloatingActionButton actionButton;
   private ClusterManager<Rating> clusterManager;
+  private RatingController ratingController;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +49,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     configureRateButtons();
 
     buildGoogleApiClient();
+
+    ratingController = new RatingController();
 
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
     SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -77,8 +85,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     mMap.getUiSettings().setMyLocationButtonEnabled(false);
     mMap.setMyLocationEnabled(true);
+    goToPosition(new LatLng(DEFAULT_LAT, DEFAULT_LONG), DEFAULT_ZOOM);
 
-    goToCurrentLocation();
+    this.clusterManager = new ClusterManager<>(this, mMap);
+    RatingRenderer renderer = new RatingRenderer(this, mMap, clusterManager);
+    clusterManager.setRenderer(renderer);
+
+    mMap.setOnCameraChangeListener(clusterManager);
+    mMap.setOnMarkerClickListener(clusterManager);
+
+    clusterManager.setOnClusterClickListener(this);
+    clusterManager.setOnClusterItemClickListener(this);
+
+    clusterManager.addItems(ratingController.getRatings());
+    clusterManager.cluster();
   }
 
   private void goToCurrentLocation() {
@@ -86,8 +106,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
       return;
     }
     LatLng latLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+    goToPosition(latLng, 17);
+  }
+
+  private void goToPosition(LatLng latLng, float zoom) {
     mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-    mMap.animateCamera(CameraUpdateFactory.zoomTo(17));
+    mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom));
   }
 
   private void configureBottomSheetBehavior() {
@@ -108,7 +132,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     View.OnClickListener rateButtonListener = new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Toast.makeText(MapsActivity.this, "Rating: " + v.getTag().toString(), Toast.LENGTH_SHORT).show();
+        int rate = Integer.parseInt((String) v.getTag());
+        Rating rating = new Rating(lastLocation.getLatitude(), lastLocation.getLongitude(), rate);
+        ratingController.addRating(rating);
+        clusterManager.addItem(rating);
+        clusterManager.cluster();
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
       }
     };
@@ -163,5 +191,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         .addOnConnectionFailedListener(this)
         .addApi(LocationServices.API)
         .build();
+  }
+
+  @Override
+  public boolean onClusterClick(Cluster<Rating> cluster) {
+    float zoom = mMap.getCameraPosition().zoom;
+    zoom++;
+
+    LatLng latLng = cluster.getPosition();
+    goToPosition(latLng, zoom);
+
+    return true;
+  }
+
+  @Override
+  public boolean onClusterItemClick(Rating rating) {
+    return true;
   }
 }
