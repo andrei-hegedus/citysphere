@@ -10,16 +10,16 @@ public class RatingController {
 
   public List<Rating> getRatings() {
    List<Rating> ratings = new ArrayList<>();
-    ratings.add(new Rating(46.796304, 25.442658, 5));
-    ratings.add(new Rating(46.794973, 25.436418, 2));
-    ratings.add(new Rating(46.792990, 25.439358, 1));
-    ratings.add(new Rating(46.793724, 25.448391, 4));
-    ratings.add(new Rating(46.802920, 25.451417, 2));
-    ratings.add(new Rating(46.812613, 25.460322, 3));
-    ratings.add(new Rating(46.823273, 25.446246, 4));
-    ratings.add(new Rating(46.828485, 25.463154, 3));
-    ratings.add(new Rating(46.828705, 25.478497, 5));
-    ratings.add(new Rating(46.835869, 25.491285, 4));
+    ratings.add(new Rating(46.450362, 23.566704, 5));
+    ratings.add(new Rating(46.442201, 23.575630, 2));
+    ratings.add(new Rating(46.442555, 23.538551, 1));
+    ratings.add(new Rating(46.438888, 23.546448, 4));
+    ratings.add(new Rating(46.428359, 23.574600, 2));
+    ratings.add(new Rating(46.434275, 23.548336, 3));
+    ratings.add(new Rating(46.429424, 23.571510, 4));
+    ratings.add(new Rating(46.409543, 23.591766, 3));
+    ratings.add(new Rating(46.437554, 23.595200, 5));
+    ratings.add(new Rating(46.420753, 23.544388, 4));
 
     return ratings;
   }
