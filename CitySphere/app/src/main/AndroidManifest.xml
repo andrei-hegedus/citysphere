@@ -40,6 +40,8 @@
             </intent-filter>
         </activity>
         <service android:name=".PollNotificationService"/>
+
+        <activity android:name=".PollActivity"/>
     </application>
 
 </manifest>

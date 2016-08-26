@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Created by andrei on 8/26/16.
  */
-public class Poll implements Serializable{
+public class Poll implements Serializable {
     private String id;
     private String title;
     private List<String> questions = new ArrayList<>();
@@ -19,12 +19,14 @@ public class Poll implements Serializable{
 
     public static List<Poll> fromMap(Map map) {
         ArrayList<Poll> list = new ArrayList<>();
-        for (Object key : map.keySet()) {
-            HashMap pollValues = (HashMap) map.get(key);
-            String title = (String) pollValues.get("title");
-            List<String> questions = (List<String>) pollValues.get("questions");
-            Poll poll = new Poll((String) key, title, questions);
-            list.add(poll);
+        if (map != null) {
+            for (Object key : map.keySet()) {
+                HashMap pollValues = (HashMap) map.get(key);
+                String title = (String) pollValues.get("title");
+                List<String> questions = (List<String>) pollValues.get("questions");
+                Poll poll = new Poll((String) key, title, questions);
+                list.add(poll);
+            }
         }
         return list;
     }

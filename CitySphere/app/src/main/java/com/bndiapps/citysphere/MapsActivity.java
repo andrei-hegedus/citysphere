@@ -164,8 +164,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         builder.addAction(okAction);
 
         Intent iCancel = new Intent(this, PollNotificationService.class);
-        iOK.putExtra(PollNotificationService.NOTIFICATION_ID, notificationId);
-        PendingIntent iCancelPendingIntent = PendingIntent.getService(this, 1, iOK, PendingIntent.FLAG_UPDATE_CURRENT);
+        iCancel.putExtra(PollNotificationService.NOTIFICATION_ID, notificationId);
+        PendingIntent iCancelPendingIntent = PendingIntent.getService(this, 1, iCancel, PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Action cancelAction = new NotificationCompat.Action.Builder(android.R.drawable.ic_menu_close_clear_cancel, "No Thanks", iCancelPendingIntent).build();
         builder.addAction(cancelAction);
 

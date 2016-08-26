@@ -28,7 +28,10 @@ public class PollNotificationService extends IntentService {
         notificationManager.cancel(notificationId);
         Poll poll = (Poll) intent.getExtras().getSerializable(POLL);
         if(poll!=null){
-            // TODO - POLL wizard
+            Intent startPollActivityIntent = new Intent(getBaseContext(), PollActivity.class);
+            startPollActivityIntent.putExtra(POLL, poll);
+            startPollActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(startPollActivityIntent);
         }
     }
 }
